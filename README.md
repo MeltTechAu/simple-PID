@@ -30,4 +30,16 @@ Running on http://192.168.0.166:5000
 
 Works with Maxx31855 chip only
 
+Max31855 chip settingss 
+
+css 8
+clk 11
+do 9
+
+relay pin for heat pin 20
+
+you can change these eit main file
+TURN ON SPI SETTINGS ON YOR RPI SETTTINGS IN RASPBERRY PI ONFIGURATTIONS NDER INTERFACES
+
+
 made by MeltTech 2024
