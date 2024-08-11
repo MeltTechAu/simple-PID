@@ -1,6 +1,7 @@
 # simple-PID
 simple PID RPI
 Made for rassbberry pi kiln controller ssimple PID
+download zip unzip to main pi home directory 
 
 install
 in terminal copy paste 
