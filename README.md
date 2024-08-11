@@ -27,4 +27,7 @@ to get it on your phone put in ip adresss of youur PI example below
 
 Running on http://192.168.0.166:5000
 
+
+Works with Maxx31855 chip only
+
 made by MeltTech 2024
