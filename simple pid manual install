@@ -1,0 +1,21 @@
+simple-PID-main
+
+
+python3 -m venv venv
+
+source venv/bin/activate
+
+pip install adafruit-blinka
+
+pip install adafruit-circuitpython-max31855
+
+pip install simple-pid
+
+pip install flask
+
+
+
+
+to rn program
+
+python kiln_controller.py
