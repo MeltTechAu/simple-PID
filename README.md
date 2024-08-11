@@ -5,14 +5,14 @@ Made for rassbberry pi kiln controller ssimple PID
 install
 in terminal copy paste 
 
-cd kc
+cd simple-PID-main
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
 that will insstall it now to run it in terminal type or copy  paste one line at a time below
 
-cd kc
+cd simple-PID-main
 source venv/bin/activate
 python kiln_controller.py
 
