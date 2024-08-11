@@ -1,0 +1,14 @@
+Flask==2.3.2
+RPi.GPIO==0.7.0
+Adafruit-Blinka==8.2.1
+adafruit-circuitpython-max31855==2.2.11
+simple-pid==1.0.1
+
+
+# untested - for PT100 platinum thermocouples
+#adafruit-circuitpython-max31865
+
+# untested - for mcp9600 and mcp9601
+#adafruit-circuitpython-mcp9600
+
+# Add any additional dependencies here if needed

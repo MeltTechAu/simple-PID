@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiln Controller</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+        background: linear-gradient(-45deg, #ff69b4, #ff1493, #ffb6c1, #ffc0cb);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+    }
+
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    input, select {
+        margin: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin: 10px;
+        border-radius: 5px;
+        border: none;
+        background-color: #ff69b4; /* Hot pink */
+        color: white;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    button:hover {
+        background-color: #ff1493; /* Deeper pink on hover */
+        transform: scale(1.05);
+    }
+
+    #chartContainer {
+        margin-top: 20px;
+    }
+
+    #status p {
+        font-size: 18px;
+    }
+
+    #relay_status {
+        font-weight: bold;
+        color: green; /* Green for ON, will change to red for OFF dynamically */
+    }
+    
+    /* Theme selector styles */
+    #theme_selector {
+        margin: 20px;
+    }
+
+    #gaugeContainer {
+        margin-top: 20px;
+    }
+    
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+        background-color: #f8e1f4; /* Pink background */
+    }
+    input {
+        margin: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin: 10px;
+        border-radius: 5px;
+        border: none;
+        background-color: #ff69b4; /* Hot pink */
+        color: white;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #ff1493; /* Deeper pink on hover */
+    }
+    #chartContainer {
+        margin-top: 20px;
+    }
+    #status p {
+        font-size: 18px;
+    }
+    #relay_status {
+        font-weight: bold;
+        color: green; /* Green for ON, will change to red for OFF dynamically */
+    }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        input {
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        #chartContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kiln Controller</h1>
+
+    <!-- Theme Selector -->
+    <div id="theme_selector">
+        <label for="theme">Select Theme:</label>
+        <select id="theme" name="theme" onchange="changeTheme()">
+            <option value="default">Default</option>
+            <option value="light">Light Mode</option>
+            <option value="dark">Dark Mode</option>
+        </select>
+    </div>
+
+    <!-- Real-Time Temperature Gauge -->
+    <div id="gaugeContainer">
+        <canvas id="temperatureGauge" width="200" height="200"></canvas>
+    </div>
+    <div>
+        <label for="set_point">Set Point (°C):</label>
+        <input type="number" id="set_point" name="set_point" title="Set the target temperature in °C">
+        <br>
+        <label for="hold_time">Hold Time (seconds):</label>
+        <input type="number" id="hold_time" name="hold_time" title="Set the duration to hold the target temperature">
+        <br>
+        <button onclick="startKiln()">Start Kiln</button>
+        <button onclick="pauseKiln()">Pause Kiln</button>
+    <button onclick="stopKiln()">Stop Kiln</button>
+    <p>Relay Status: <span id="relay_status">OFF</span></p>
+    </div>
+
+    
+<div id="dashboard">
+    <h2>Real-Time Monitoring Dashboard</h2>
+    <div id="temperature_status">
+        <h3>Temperature Status</h3>
+        <p style="font-size: 48px;">Current Temperature: <span id="current_temp_display">0</span> °C</p>
+        <p>Set Point: <span id="set_point_display">0</span> °C</p>
+        <p>Relay Status: <span id="relay_status_display">OFF</span></p>
+    </div>
+    <div id="alerts">
+        <h3>Alerts</h3>
+        <p id="alerts_display">No alerts</p>
+    </div>
+</div>
+
+<div id="status">
+        <h2>Status</h2>
+        <p>Current Temperature: <span id="current_temperature">0</span> °C</p>
+        <p>Set Point: <span id="set_point_display">0</span> °C</p>
+        <p>Elapsed Time: <span id="elapsed_time">0</span> seconds</p>
+    </div>
+
+    
+<div id="chartContainer">
+        <canvas id="temperatureChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+function updateDashboard() {
+    fetch('/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('current_temp_display').innerText = data.current_temperature.toFixed(2);
+            document.getElementById('set_point_display').innerText = data.set_point.toFixed(2);
+            const relayStatus = data.current_temperature >= data.set_point ? "ON" : "OFF";
+            document.getElementById('relay_status_display').innerText = relayStatus;
+
+            // Handle alerts
+            const alertsDisplay = document.getElementById('alerts_display');
+            if (data.current_temperature > data.set_point + 50) {
+                alertsDisplay.innerText = "Warning: Temperature significantly above set point!";
+                alertsDisplay.style.color = "red";
+            } else if (data.current_temperature < data.set_point - 50) {
+                alertsDisplay.innerText = "Warning: Temperature significantly below set point!";
+                alertsDisplay.style.color = "orange";
+            } else {
+                alertsDisplay.innerText = "No alerts";
+                alertsDisplay.style.color = "green";
+            }
+        });
+}
+
+// Update the dashboard every 2 seconds
+setInterval(updateDashboard, 2000);
+
+</script>
+    <script>
+        let temperatureData = [];
+        let timeData = [];
+        let chart;
+
+        function startKiln() {
+            const setPoint = document.getElementById('set_point').value;
+            const holdTime = document.getElementById('hold_time').value;
+            
+            fetch('/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    set_point: setPoint,
+                    hold_time: holdTime,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('set_point_display').innerText = setPoint;
+                    alert('Kiln started successfully');
+                } else {
+                    alert('Failed to start kiln');
+                }
+            });
+        }
+
+        function pauseKiln() {
+            const pauseTemp = document.getElementById('current_temperature').innerText;
+            
+            fetch('/pause_at_temp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ pause_temp: pauseTemp }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert(data.message);
+                } else {
+                    alert('Failed to pause kiln');
+                }
+            });
+        }
+
+        function stopKiln() {
+            fetch('/stop', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Kiln stopped successfully');
+                } else {
+                    alert('Failed to stop kiln');
+                }
+            });
+        }
+
+        function changeTheme() {
+        const theme = document.getElementById("theme").value;
+        if (theme === "light") {
+            document.body.style.backgroundColor = "#ffffff";
+            document.body.style.color = "#000000";
+        } else if (theme === "dark") {
+            document.body.style.backgroundColor = "#000000";
+            document.body.style.color = "#ffffff";
+        } else {
+            document.body.style.background = "linear-gradient(-45deg, #ff69b4, #ff1493, #ffb6c1, #ffc0cb)";
+            document.body.style.color = "#000000";
+        }
+    }
+
+    function drawGauge(temperature) {
+        const canvas = document.getElementById('temperatureGauge');
+        const ctx = canvas.getContext('2d');
+        const radius = canvas.height / 2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the circle
+        ctx.beginPath();
+        ctx.arc(radius, radius, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ff69b4'; // Hot pink for the gauge
+        ctx.fill();
+        
+        // Draw the temperature indicator
+        const angle = (temperature / 100) * 2 * Math.PI; // Assuming max temperature is 100°C for this gauge
+        ctx.beginPath();
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, -Math.PI / 2, angle - Math.PI / 2, false);
+        ctx.fillStyle = '#ff1493'; // Deeper pink
+        ctx.fill();
+
+        // Draw the temperature text
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.fillText(temperature.toFixed(1) + "°C", radius, radius + 10);
+    }
+
+    function updateStatus() {
+        fetch('/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('current_temperature').innerText = data.current_temperature.toFixed(2);
+            document.getElementById('elapsed_time').innerText = data.time_running.toFixed(2);
+
+            const relayStatus = data.relay_status ? "ON" : "OFF";
+            const relayElement = document.getElementById('relay_status');
+            relayElement.innerText = relayStatus;
+            relayElement.style.color = relayStatus === "ON" ? "green" : "red";
+
+            // Update the gauge
+            drawGauge(data.current_temperature);
+
+            // Update the chart
+            temperatureData.push(data.current_temperature);
+            timeData.push(data.time_running);
+            
+            if (chart) {
+                chart.update();
+            }
+        });
+            fetch('/status')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('current_temperature').innerText = data.current_temperature.toFixed(2);
+                document.getElementById('elapsed_time').innerText = data.time_running.toFixed(2);
+
+                const relayStatus = data.relay_status ? "ON" : "OFF";
+                const relayElement = document.getElementById('relay_status');
+                relayElement.innerText = relayStatus;
+                relayElement.style.color = relayStatus === "ON" ? "green" : "red";
+
+                // Update the chart
+                temperatureData.push(data.current_temperature);
+                timeData.push(data.time_running);
+                
+                if (chart) {
+                    chart.update();
+                }
+            });
+            fetch('/status')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('current_temperature').innerText = data.current_temperature.toFixed(2);
+                document.getElementById('elapsed_time').innerText = data.elapsed_time.toFixed(2);
+                
+                // Update the chart
+                temperatureData.push(data.current_temperature);
+                timeData.push(data.elapsed_time);
+                
+                if (chart) {
+                    chart.update();
+                }
+            });
+        }
+
+        function setupChart() {
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeData,
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: temperatureData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupChart();
+            setInterval(updateStatus, 1000);
+        });
+    
+function updateDashboard() {
+    fetch('/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('current_temp_display').innerText = data.current_temperature.toFixed(2);
+            document.getElementById('set_point_display').innerText = data.set_point.toFixed(2);
+            const relayStatus = data.current_temperature >= data.set_point ? "ON" : "OFF";
+            document.getElementById('relay_status_display').innerText = relayStatus;
+
+            // Handle alerts
+            const alertsDisplay = document.getElementById('alerts_display');
+            if (data.current_temperature > data.set_point + 50) {
+                alertsDisplay.innerText = "Warning: Temperature significantly above set point!";
+                alertsDisplay.style.color = "red";
+            } else if (data.current_temperature < data.set_point - 50) {
+                alertsDisplay.innerText = "Warning: Temperature significantly below set point!";
+                alertsDisplay.style.color = "orange";
+            } else {
+                alertsDisplay.innerText = "No alerts";
+                alertsDisplay.style.color = "green";
+            }
+        });
+}
+
+// Update the dashboard every 2 seconds
+setInterval(updateDashboard, 2000);
+
+</script>
+
+</body>
+</html>
