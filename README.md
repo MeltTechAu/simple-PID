@@ -11,7 +11,7 @@ $    python3 -m venv venv
 $    source venv/bin/activate
 $    pip install -r requirements.txt
 
-that will insstall it now to run it in terminal type or copy  paste one line at a time below
+that will install it now to run it in terminal type or copy  paste one line at a time below
 
 $    cd simple-PID-main
 $    source venv/bin/activate
@@ -41,5 +41,6 @@ relay pin for heat pin 20
 you can change these eit main file
 TURN ON SPI SETTINGS ON YOR RPI SETTTINGS IN RASPBERRY PI ONFIGURATTIONS NDER INTERFACES
 
+IF it gets a board error try manual install file in download install drivers one at a time see files fror manual install!!!!!
 
 made by MeltTech 2024
